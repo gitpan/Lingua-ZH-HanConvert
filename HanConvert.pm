@@ -10,7 +10,7 @@ BEGIN {
     use Exporter;
     @ISA = qw(Exporter);
     @EXPORT_OK = qw(&trad &simple);
-    $VERSION = "0.11";
+    $VERSION = "0.12";
 }
 
 our %trad = ( # string of possible traditional chars for each simplified char
@@ -910,8 +910,8 @@ program you are reading it with is unicode-aware.
 
 =head1 SEE ALSO
 
-If you just want to convert some text, you might want to use HanConvert, the
-Perl script which comes with this module.
+If you just want to convert some text, you might want to use trad2simp and
+simp2trad, the Perl scripts which come with this module.
 
 =head1 ACKNOWLEDGEMENTS
 
