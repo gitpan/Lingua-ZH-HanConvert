@@ -6,9 +6,10 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..5\n"; }
+BEGIN { $| = 1; print "1..6\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Lingua::ZH::HanConvert qw(trad simple);
+use utf8;
 $loaded = 1;
 print "ok 1\n";
 
@@ -18,16 +19,24 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
-my $testno = 2;
-
-my $trad = "萬與醜專業叢東絲兩嚴喪個豐";
-my $simp = "万与丑专业丛东丝两严丧个丰";
-
-test_eq(simple($trad), $simp, $testno++);
-test_eq(trad($simp), $trad, $testno++);
-test_eq(simple("hello"), "hello", $testno++);
-test_eq(trad("hello"), "hello", $testno++);
+use vars qw($testno);
+$testno = 2;
 
 sub test_eq {
-    print (((shift eq shift) ? "ok " : "not ok ") , shift, "\n");
+    # print qq(testing whether "$_[0]" eq "$_[1]"\n);
+    print ((($_[0] eq $_[1]) ? "ok " : "not ok ") , $testno++, "\n");
 }
+
+# 1-1 test
+test_eq( simple("萬與專個"), "万与专个" );
+
+# 1-many test
+test_eq( trad  ("万与专个"), "[万萬][与與]專個");
+
+# custom brackets test
+test_eq( trad  ("万与丑专个", "<", ">"), "<万萬><与與><丑醜>專個");
+
+# non-chinese tests
+test_eq( simple("hello"), "hello" );
+test_eq( trad("hello"),   "hello" );
+

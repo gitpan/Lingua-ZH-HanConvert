@@ -1,0 +1,14 @@
+Revision history for Perl extension Parse::RecDescent.
+
+0.10 Sat Sep 22 07:38:30 UTC 2001
+
+	- Added support and data for one-to-many mappings.
+	
+	- Added "use v5.6.0;" to prevent silent failure on earlier versions.
+	
+	- Fixed test.pl to use UTF-8 literals - make test was failing.
+
+
+0.01  Thu Jul 12 11:34:04 UTC 2001
+
+	- original version
