@@ -1,5 +1,13 @@
 Revision history for Perl extension Parse::RecDescent.
 
+0.11 Sun Sep 23 09:36:46 UTC 2001
+
+	- Changed subroutines to improve execution speed.
+	
+	- Made documentation more clear.
+
+	- Added command-line conversion scripts trad2simp and simp2trad.
+
 0.10 Sat Sep 22 07:38:30 UTC 2001
 
 	- Added support and data for one-to-many mappings.

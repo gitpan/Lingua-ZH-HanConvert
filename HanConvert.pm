@@ -10,7 +10,7 @@ BEGIN {
     use Exporter;
     @ISA = qw(Exporter);
     @EXPORT_OK = qw(&trad &simple);
-    $VERSION = "0.10";
+    $VERSION = "0.11";
 }
 
 our %trad = ( # string of possible traditional chars for each simplified char
@@ -770,12 +770,9 @@ our %simp = ( # string of possible simplified chars for each traditional char
 	龜=>"龟", 龥=>"吁",
 );
 
+
 our $simplified  = join "", keys %trad; # chars with a traditional equivalent
 our $traditional = join "", keys %simp; # chars with a simplified equivalent
-
-# ^^ would be equivalent to following nasty kludge but for UTF-handling bug
-#our $simplified = join"", map{/(\p{InCJKUnifiedIdeographs})/; $1} keys %trad;
-#our $traditional = join"", map{/(\p{InCJKUnifiedIdeographs})/; $1} keys %simp;
 
 
 sub simple {
@@ -784,31 +781,33 @@ sub simple {
     $open_bracket  = "[" unless defined $open_bracket;
     $close_bracket = "]" unless defined $close_bracket;
 
-    eval '$string =~ ' . "s<([$traditional])>" . '
-	<
-	    local $_ = $simp{$1};
-	    die "no simplified equivalent" unless defined $_;
-	    (1==length($_) ? $_ : $open_bracket . $_ . $close_bracket);
-	>ge;
-    ';
-    die "Error in subroutine simple: $@" if $@;
+    return $string unless $string =~ /(.*\p{InCJKUnifiedIdeographs}.*)/;
+    $string = $1; # nasty kludge round perl unicode bug
+	
+    $string =~ s<([$traditional])>
+    <
+	local $_ = $simp{$1};
+    	die "program error: no simplified equivalent to $1" unless defined $_;
+    	(1==length($_) ? $_ : $open_bracket . $_ . $close_bracket);
+    >ge;
     return $string;
-}
+};
+
 
 sub trad {
     my($string, $open_bracket, $close_bracket) = @_;
     $open_bracket  = "[" unless defined $open_bracket;
     $close_bracket = "]" unless defined $close_bracket;
-        
-    eval
-	'$string =~ ' . "s<([$simplified])>" . '
-	<
-	    my $t = $trad{$1};
-	    die "no traditional equivalent" unless defined $t;
-	    (1==length $t ? $t : $open_bracket . $t . $close_bracket);
-	>ge;
-    ';
-    die "Error in subroutine trad: $@" if $@;
+    
+    return $string unless $string =~ /(.*\p{InCJKUnifiedIdeographs}.*)/;
+    $string = $1; # nasty kludge round perl unicode bug
+
+    $string =~ s<([$simplified])>
+    <
+	my $t = $trad{$1};
+	die "program error: no traditional equivalent to $2" unless defined $t;
+	(1==length $t ? $t : $open_bracket . $t . $close_bracket);
+    >ge;
     return $string;
 }
 
@@ -846,14 +845,13 @@ Perl 5.6
 In the 1950's, the Chinese government simplified over 2000 Chinese
 characters.  Taiwan and Hong Kong still use the traditional characters.
 The simplified characters are hard to read if you only know the traditional
-ones, and vice-versa.
-
-This module attempts to convert Chinese text between the two forms, using
-character-by-character transliteration.
+ones, and vice-versa.  This module attempts to convert Chinese text between
+the two forms, using character-by-character transliteration.
 
 Note that this module only handles text in the Unicode UTF-8 character set.
 If you need to convert between the Big5 and GB character sets, then please
-look at L<Text::IConv>.
+look at L<Text::IConv>, or use the C<HanConvert> Perl script which comes
+with this module.
 
 C<simple> takes a string, converts any traditional Chinese characters (such
 as E<22283>, unicode U+570B, meaning "country") to the corresponding
@@ -882,34 +880,44 @@ incorrect or missing.
 Some characters which are simplified forms are also traditional forms.  For
 example, E<38754>, unicode U+9762, is the simplified form of E<40629>,
 unicode U+9EB5, meaning "noodles"; but it is also the character for "face"
-in both traditional and simplified writing.  Since most references about
-simplified characters are designed for humans, they do not mention the
-latter type of mapping, since a human who came across such a character
-could use common sense to understand it.  To provide this module with that
-extra information, it has been assumed that any simplified form which
-appears in the Big5 character set is also a traditional form.  In some
-cases, this assumption may be incorrect, or insufficient (i.e. there may be
-simplified forms which are also traditional forms but do not appear in
-Big5).
+in both traditional and simplified writing.  Most character mapping lists
+say that simplified E<38754> (U+9762) can correspond to traditional
+E<40629> (U+9EB5), but do not mention that simplified E<38754> (U+9762) can
+map to traditional E<38754> (U+9762); common sense makes this is obvious to
+a human who comes across this character in a text, but not to a computer
+program.  To provide this module with that extra information, it has been
+assumed that any simplified form which appears in the Big5 character set is
+also a traditional form.  In some cases, this assumption may be incorrect.
 
 The transliteration mappings could be improved. Ideally, I'd like to see
-the module performing word-by-word transliteration, if suitable data
-sources were available.  See
+the module performing intelligent transliteration of ambiguous characters
+based on context, if suitable data sources were available.  See
 C<http://www.basistech.com/articles/C2C.html> for a discussion of
 transliteration issues.
 
-The conversions are slow, which may be a problem if you need to process a
-lot of text.  Please let me know if the module is too slow for your
-purposes; I can probably speed it up if this would be useful.
+Some differences in styles of Chinese writing are not related to simplified
+characters.  For instance, the mainland Chinese word for "computer" differs
+from the word used in Taiwan.  Colloquial Cantonese writing is different
+from Mandarin writing, and everyday Cantonese text such as
+"E<20322>E<20418>E<21780>E<20418>E<25105>E<13774>" ("is it mine?") contains
+characters and phrases which may be unfamiliar to a Mandarin-speaking
+reader.  These issues are beyond the scope of this module; analogously, a
+module which converted American English spelling into British English
+spelling would not change the word "gasoline" into the word "petrol".
 
 The characters in this documentation may not display correctly unless the
 program you are reading it with is unicode-aware.
 
+=head1 SEE ALSO
+
+If you just want to convert some text, you might want to use HanConvert, the
+Perl script which comes with this module.
+
 =head1 ACKNOWLEDGEMENTS
 
-The data used by this module is taken from the Unicode consortium's
-Unihan database, available from C<ftp://ftp.unicode.org>.  Thanks to
-them for compiling the data.
+Much of the data used by this module is taken from the Unicode consortium's
+Unihan database, available from C<ftp://ftp.unicode.org>.  Thanks to them
+for compiling the data and making it freely available.
 
 =head1 AUTHOR
 

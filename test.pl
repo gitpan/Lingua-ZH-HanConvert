@@ -23,7 +23,9 @@ use vars qw($testno);
 $testno = 2;
 
 sub test_eq {
-    # print qq(testing whether "$_[0]" eq "$_[1]"\n);
+    if(exists $ENV{TEST_VERBOSE} and $ENV{TEST_VERBOSE}) {
+	print qq(testing whether "$_[0]" eq "$_[1]"\n);
+    }
     print ((($_[0] eq $_[1]) ? "ok " : "not ok ") , $testno++, "\n");
 }
 
